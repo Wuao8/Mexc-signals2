@@ -62,27 +62,26 @@ def get_klines(symbol, interval="1d", limit=100):
         "limit": limit
     }
 
-    data = requests.get(url, params=params).json()
+    response = requests.get(url, params=params)
+    data = response.json()
 
-    # 🔥 sicurezza: controlla struttura
-    if not isinstance(data, list) or len(data) == 0:
-        raise Exception(f"Invalid API response for {symbol}: {data}")
+    # 🔥 DEBUG se API cambia formato
+    if not isinstance(data, list):
+        raise Exception(f"API ERROR {symbol}: {data}")
 
-    # 🔥 prendi solo le prime 6 colonne (quelle che servono davvero)
-    df = pd.DataFrame(data)
+    # 🔥 prendiamo solo le prime 6 colonne utili (safe mode)
+    cleaned = []
+    for row in data:
+        if isinstance(row, list) and len(row) >= 6:
+            cleaned.append(row[:6])
 
-    # MEXC spesso ritorna:
-    # [time, open, high, low, close, volume, ...]
-    df = df.iloc[:, :6]
+    if len(cleaned) == 0:
+        raise Exception(f"No valid candle data for {symbol}")
 
-    df.columns = [
-        "open_time",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume"
-    ]
+    df = pd.DataFrame(
+        cleaned,
+        columns=["open_time", "open", "high", "low", "close", "volume"]
+    )
 
     df["close"] = df["close"].astype(float)
 
