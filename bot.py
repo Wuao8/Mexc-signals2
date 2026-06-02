@@ -64,23 +64,25 @@ def get_klines(symbol, interval="1d", limit=100):
 
     data = requests.get(url, params=params).json()
 
-    df = pd.DataFrame(
-        data,
-        columns=[
-            "open_time",
-            "open",
-            "high",
-            "low",
-            "close",
-            "volume",
-            "close_time",
-            "qav",
-            "trades",
-            "tbb",
-            "tbq",
-            "ignore"
-        ]
-    )
+    # 🔥 sicurezza: controlla struttura
+    if not isinstance(data, list) or len(data) == 0:
+        raise Exception(f"Invalid API response for {symbol}: {data}")
+
+    # 🔥 prendi solo le prime 6 colonne (quelle che servono davvero)
+    df = pd.DataFrame(data)
+
+    # MEXC spesso ritorna:
+    # [time, open, high, low, close, volume, ...]
+    df = df.iloc[:, :6]
+
+    df.columns = [
+        "open_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume"
+    ]
 
     df["close"] = df["close"].astype(float)
 
