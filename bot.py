@@ -30,8 +30,10 @@ def send_message(text):
 # TOP 50 USDT (MEXC)
 # ======================
 
-def get_top_50_usdt():
+def get_top_300_usdt():
     url = "https://api.mexc.com/api/v3/ticker/24hr"
+
+    min_volume = 30000
 
     data = requests.get(url).json()
 
@@ -46,7 +48,12 @@ def get_top_50_usdt():
         reverse=True
     )
 
-    return [x["symbol"] for x in sorted_pairs[:50]]
+    filtered_pairs = [
+        x for x in sorted_pairs
+        if float(x["quoteVolume"]) > min_volume
+    ]
+
+    return [x["symbol"] for x in filtered_pairs[:300]]
 
 
 # ======================
