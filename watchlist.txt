@@ -1,1 +1,5 @@
+# MEXC Signals 2
+# Formato:
+# TICKERUSDT,PREZZO
 
+BTCUSDT,110000
