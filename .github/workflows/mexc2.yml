@@ -1,16 +1,16 @@
-name: MEXC Bot
+name: MEXC Signals 2
 
 on:
   schedule:
-    - cron: "0 */8 * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
-  run-bot:
+  run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -19,10 +19,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests pandas
+        run: pip install -r requirements.txt
 
       - name: Run bot
         env:
           TOKEN: ${{ secrets.TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: python bot.py
+        run: python main.py
