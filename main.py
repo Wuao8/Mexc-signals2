@@ -1,29 +1,29 @@
 import os
+import json
 import requests
 
 TOKEN = os.getenv("TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 WATCHLIST = "watchlist.txt"
-MEXC_API = "https://api.mexc.com/api/v3/ticker/price"
+TRIGGERED = "triggered.json"
+
+API = "https://api.mexc.com/api/v3/ticker/price"
 
 
-def send_telegram(text):
+def telegram(msg):
     requests.get(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        params={
-            "chat_id": CHAT_ID,
-            "text": text
-        },
+        params={"chat_id": CHAT_ID, "text": msg},
         timeout=10,
     )
 
 
 def load_watchlist():
-    data = []
+    coins = []
 
     if not os.path.exists(WATCHLIST):
-        return data
+        return coins
 
     with open(WATCHLIST, "r") as f:
         for line in f:
@@ -36,19 +36,28 @@ def load_watchlist():
                 symbol, target = line.split(",")
                 symbol = symbol.strip().upper().replace("/", "")
                 target = float(target.strip())
-                data.append((symbol, target))
+                coins.append((symbol, target))
             except:
                 pass
 
-    return data
+    return coins
 
 
-def get_price(symbol):
-    r = requests.get(
-        MEXC_API,
-        params={"symbol": symbol},
-        timeout=10
-    )
+def load_triggered():
+    if not os.path.exists(TRIGGERED):
+        return {}
+
+    with open(TRIGGERED, "r") as f:
+        return json.load(f)
+
+
+def save_triggered(data):
+    with open(TRIGGERED, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def price(symbol):
+    r = requests.get(API, params={"symbol": symbol}, timeout=10)
 
     if r.status_code != 200:
         return None
@@ -57,22 +66,33 @@ def get_price(symbol):
 
 
 def main():
-    watchlist = load_watchlist()
 
-    for symbol, target in watchlist:
+    triggered = load_triggered()
 
-        price = get_price(symbol)
+    for symbol, target in load_watchlist():
 
-        if price is None:
+        key = f"{symbol}_{target}"
+
+        if key in triggered:
             continue
 
-        if price >= target:
-            send_telegram(
-                f"🚨 {symbol}\n\n"
-                f"Prezzo raggiunto!\n"
+        p = price(symbol)
+
+        if p is None:
+            continue
+
+        if p >= target:
+
+            telegram(
+                f"🎯 TARGET RAGGIUNTO\n\n"
+                f"{symbol}\n"
                 f"Target: {target}\n"
-                f"Prezzo attuale: {price}"
+                f"Prezzo: {p}"
             )
+
+            triggered[key] = True
+
+    save_triggered(triggered)
 
 
 if __name__ == "__main__":
