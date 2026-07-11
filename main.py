@@ -12,11 +12,12 @@ API = "https://api.mexc.com/api/v3/ticker/price"
 
 
 def telegram(msg):
-    requests.get(
+    r = requests.get(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         params={"chat_id": CHAT_ID, "text": msg},
         timeout=10,
     )
+    print(r.status_code, r.text)
 
 
 def load_watchlist():
