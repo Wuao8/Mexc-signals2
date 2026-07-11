@@ -77,6 +77,7 @@ def main():
             continue
 
         p = price(symbol)
+        print(symbol, "target:", target, "prezzo:", p)
 
         if p is None:
             continue
